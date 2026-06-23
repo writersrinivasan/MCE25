@@ -16,6 +16,11 @@ out/
 tsconfig.tsbuildinfo
 next-env.d.ts
 
+# Alumni data — contains personal information, never commit
+*.xlsx
+*.xls
+*.csv
+
 # OS files
 .DS_Store
 Thumbs.db
