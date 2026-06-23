@@ -1,0 +1,57 @@
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+  const isPublicPath = pathname === '/' || pathname.startsWith('/auth')
+  const isAdminPath = pathname.startsWith('/admin')
+
+  if (!user && !isPublicPath) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+
+  if (user && !isPublicPath) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('status, is_profile_complete, role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile) {
+      if (!profile.is_profile_complete && pathname !== '/onboarding') {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+      if (profile.status === 'pending' && !pathname.startsWith('/pending-approval') && !pathname.startsWith('/onboarding')) {
+        return NextResponse.redirect(new URL('/pending-approval', request.url))
+      }
+      // Admin path guard — handled in admin/layout.tsx, no extra redirect needed here
+    }
+  }
+
+  return supabaseResponse
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+}
