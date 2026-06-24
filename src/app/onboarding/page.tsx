@@ -21,6 +21,7 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState('')
 
@@ -56,8 +57,10 @@ export default function OnboardingPage() {
   async function handleNext() {
     if (step < STEPS.length - 1) { setStep(s => s + 1); return }
     setSaving(true)
+    setSaveError('')
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { router.push('/auth/login'); return }
+
     let avatar_url = profile.avatar_url ?? null
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop()
@@ -65,33 +68,50 @@ export default function OnboardingPage() {
       if ('error' in result) { setUploadError(result.error); setSaving(false); return }
       avatar_url = result.url
     }
-    const { error: saveError } = await (supabase as any).from('profiles').upsert({
-      id: user.id,
-      email: user.email,
-      sprno: profile.sprno ?? '',
-      full_name: profile.full_name ?? '',
-      branch: profile.branch ?? '',
-      graduation_year: profile.graduation_year,
-      status: 'approved',
-      role: 'member',
+
+    const payload = {
       avatar_url,
-      bio: profile.bio,
-      city: profile.city,
-      country: profile.country,
-      lat: profile.lat,
-      lng: profile.lng,
-      current_position: profile.current_position,
-      company: profile.company,
-      linkedin_url: profile.linkedin_url,
-      phone: profile.phone,
+      bio: profile.bio ?? null,
+      city: profile.city ?? null,
+      country: profile.country ?? null,
+      lat: profile.lat ?? null,
+      lng: profile.lng ?? null,
+      current_position: profile.current_position ?? null,
+      company: profile.company ?? null,
+      linkedin_url: profile.linkedin_url ?? null,
+      phone: profile.phone ?? null,
       is_profile_complete: true,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' })
-    setSaving(false)
-    if (saveError) {
-      setUploadError('Failed to save profile: ' + saveError.message)
-      return
     }
+
+    // Try UPDATE first (works for existing profiles without touching role/status)
+    const { error: updateErr, count } = await (supabase as any)
+      .from('profiles')
+      .update(payload)
+      .eq('id', user.id)
+      .select('id', { count: 'exact', head: true })
+
+    if (updateErr || count === 0) {
+      // Profile doesn't exist yet — insert it (trigger must have failed)
+      const { error: insertErr } = await (supabase as any).from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        sprno: profile.sprno ?? '',
+        full_name: profile.full_name ?? '',
+        branch: profile.branch ?? '',
+        graduation_year: profile.graduation_year ?? null,
+        status: 'approved',
+        role: 'member',
+        ...payload,
+      })
+      if (insertErr) {
+        setSaveError('Could not save profile: ' + insertErr.message)
+        setSaving(false)
+        return
+      }
+    }
+
+    setSaving(false)
     router.push('/dashboard?welcome=1')
     router.refresh()
   }
@@ -246,8 +266,16 @@ export default function OnboardingPage() {
             )}
           </AnimatePresence>
 
+          {/* Save error */}
+          {saveError && (
+            <div className="mt-6 p-3 rounded-lg text-sm text-red-300 flex items-center gap-2"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              ⚠️ {saveError}
+            </div>
+          )}
+
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-8">
+          <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => setStep(s => s - 1)}
               disabled={step === 0}
