@@ -213,7 +213,7 @@ ALTER TABLE announcements    ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public profiles readable by approved members" ON profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Public profiles readable by approved members"
-  ON profiles FOR SELECT USING (status = 'approved' OR auth.uid() = id);
+  ON profiles FOR SELECT USING (status::text = 'approved' OR auth.uid() = id);
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE USING (auth.uid() = id);
 
@@ -229,12 +229,12 @@ DROP POLICY IF EXISTS "Authors can update own memories" ON memories;
 DROP POLICY IF EXISTS "Authors can delete own memories" ON memories;
 CREATE POLICY "Memories readable by approved members"
   ON memories FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Approved members can post memories"
   ON memories FOR INSERT WITH CHECK (
     auth.uid() = author_id AND
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Authors can update own memories"
   ON memories FOR UPDATE USING (auth.uid() = author_id);
@@ -247,12 +247,12 @@ DROP POLICY IF EXISTS "Approved members can comment" ON comments;
 DROP POLICY IF EXISTS "Authors can delete own comments" ON comments;
 CREATE POLICY "Comments readable by approved members"
   ON comments FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Approved members can comment"
   ON comments FOR INSERT WITH CHECK (
     auth.uid() = author_id AND
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Authors can delete own comments"
   ON comments FOR DELETE USING (auth.uid() = author_id);
@@ -263,12 +263,12 @@ DROP POLICY IF EXISTS "Approved members can react" ON reactions;
 DROP POLICY IF EXISTS "Users can delete own reactions" ON reactions;
 CREATE POLICY "Reactions readable by approved members"
   ON reactions FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Approved members can react"
   ON reactions FOR INSERT WITH CHECK (
     auth.uid() = user_id AND
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Users can delete own reactions"
   ON reactions FOR DELETE USING (auth.uid() = user_id);
@@ -278,11 +278,11 @@ DROP POLICY IF EXISTS "Reunion events readable by approved members" ON reunion_e
 DROP POLICY IF EXISTS "Admins can manage reunion events" ON reunion_events;
 CREATE POLICY "Reunion events readable by approved members"
   ON reunion_events FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Admins can manage reunion events"
   ON reunion_events FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN ('admin','super_admin'))
   );
 
 -- RSVPs
@@ -290,7 +290,7 @@ DROP POLICY IF EXISTS "RSVPs readable by approved members" ON rsvps;
 DROP POLICY IF EXISTS "Users can manage own RSVP" ON rsvps;
 CREATE POLICY "RSVPs readable by approved members"
   ON rsvps FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Users can manage own RSVP"
   ON rsvps FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
@@ -300,7 +300,7 @@ DROP POLICY IF EXISTS "Then now photos readable by approved members" ON then_now
 DROP POLICY IF EXISTS "Users can manage own then now photos" ON then_now_photos;
 CREATE POLICY "Then now photos readable by approved members"
   ON then_now_photos FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Users can manage own then now photos"
   ON then_now_photos FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
@@ -312,19 +312,19 @@ DROP POLICY IF EXISTS "Admins can update announcements" ON announcements;
 DROP POLICY IF EXISTS "Admins can delete announcements" ON announcements;
 CREATE POLICY "Announcements readable by approved members"
   ON announcements FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status = 'approved')
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND status::text = 'approved')
   );
 CREATE POLICY "Admins can insert announcements"
   ON announcements FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN ('admin','super_admin'))
   );
 CREATE POLICY "Admins can update announcements"
   ON announcements FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN ('admin','super_admin'))
   );
 CREATE POLICY "Admins can delete announcements"
   ON announcements FOR DELETE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text IN ('admin','super_admin'))
   );
 
 -- ──────────────────────────────────────────────
