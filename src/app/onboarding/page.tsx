@@ -54,7 +54,26 @@ export default function OnboardingPage() {
     setAvatarPreview(URL.createObjectURL(file))
   }
 
+  async function geocodeCity(city: string | null, country: string | null): Promise<{ lat: number; lng: number } | null> {
+    const query = [city, country].filter(Boolean).join(', ')
+    if (!query) return null
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+        { headers: { 'User-Agent': 'MCE25-Alumni/1.0' } }
+      )
+      const data = await res.json()
+      if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    } catch {}
+    return null
+  }
+
   async function handleNext() {
+    // Silently geocode when leaving the Location step
+    if (step === 1 && (profile.city || profile.country)) {
+      const coords = await geocodeCity(profile.city ?? null, profile.country ?? null)
+      if (coords) setProfile(p => ({ ...p, lat: coords.lat, lng: coords.lng }))
+    }
     if (step < STEPS.length - 1) { setStep(s => s + 1); return }
     setSaving(true)
     setSaveError('')

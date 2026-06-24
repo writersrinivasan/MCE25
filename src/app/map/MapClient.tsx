@@ -170,7 +170,7 @@ export default function MapClient({ alumni, currentUserHasLocation }: { alumni: 
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={e => handleMarkerEnter(a, e)}
                     onMouseLeave={handleMarkerLeave}
-                    onClick={() => setSelectedCountry(a.country)}
+                    onClick={() => setSelectedCountry(a.country ? normalizeLocation(a.country) : null)}
                   />
                 </Marker>
               )

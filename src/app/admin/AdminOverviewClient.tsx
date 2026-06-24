@@ -1,7 +1,8 @@
 'use client'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Users, Image, Trophy, Clock, ArrowRight, CheckCircle } from 'lucide-react'
+import { Users, Image, Trophy, Clock, ArrowRight, CheckCircle, MapPin } from 'lucide-react'
 import { BRANCH_META, BRANCHES, type Branch } from '@/types/database'
 import { timeAgo } from '@/lib/utils'
 
@@ -11,6 +12,22 @@ export default function AdminOverviewClient({ stats, branchCounts, recentMembers
   recentMembers: any[]
   recentMemories: any[]
 }) {
+  const [geocoding, setGeocoding] = useState(false)
+  const [geocodeResult, setGeocodeResult] = useState('')
+
+  async function fixMapPins() {
+    setGeocoding(true)
+    setGeocodeResult('')
+    try {
+      const res = await fetch('/api/geocode-profiles', { method: 'POST' })
+      const data = await res.json()
+      setGeocodeResult(data.message ?? `Updated ${data.updated} of ${data.total} profiles`)
+    } catch {
+      setGeocodeResult('Failed. Try again.')
+    }
+    setGeocoding(false)
+  }
+
   const STAT_CARDS = [
     { label: 'Approved Members', value: stats.totalMembers, icon: Users, color: '#22c55e', href: '/admin/members' },
     { label: 'Pending Approval', value: stats.pendingCount, icon: Clock, color: '#eab308', href: '/admin/members?tab=pending', highlight: stats.pendingCount > 0 },
@@ -150,7 +167,7 @@ export default function AdminOverviewClient({ stats, branchCounts, recentMembers
 
       {/* Quick actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-        className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        className="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
         {[
           { href: '/admin/members?tab=pending', label: 'Review Pending Members', desc: `${stats.pendingCount} waiting for approval`, color: '#eab308' },
           { href: '/admin/announcements', label: 'Post Announcement', desc: 'Notify all alumni instantly', color: '#3b82f6' },
@@ -166,6 +183,16 @@ export default function AdminOverviewClient({ stats, branchCounts, recentMembers
             </div>
           </Link>
         ))}
+        <button onClick={fixMapPins} disabled={geocoding} className="glass glass-hover rounded-xl p-4 text-left disabled:opacity-60">
+          <div className="flex items-center gap-2 mb-0.5">
+            <MapPin className="w-4 h-4 text-green-400" />
+            <div className="font-medium text-white text-sm">Fix Map Pins</div>
+          </div>
+          <div className="text-slate-400 text-xs">{geocodeResult || 'Geocode all alumni locations'}</div>
+          <div className="mt-2 text-xs font-medium text-green-400">
+            {geocoding ? 'Geocoding… (takes ~1 min)' : 'Run Now'}
+          </div>
+        </button>
       </motion.div>
     </div>
   )
