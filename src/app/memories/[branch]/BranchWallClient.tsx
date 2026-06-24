@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
 import { Upload, Image, Link as LinkIcon, FileText, X, Plus, Heart, MessageCircle, Calendar, Send } from 'lucide-react'
@@ -134,7 +134,7 @@ function MemoryCard({ memory, currentUserId, onReact }: { memory: Memory; curren
   )
 }
 
-function UploadPanel({ branch, userId, onUpload }: { branch: Branch | null; userId: string; onUpload: (m: Memory) => void }) {
+function UploadPanel({ branch, userId, onUpload, onPosted }: { branch: Branch | null; userId: string; onUpload: (m: Memory) => void; onPosted: () => void }) {
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<'text' | 'image' | 'video' | 'link' | 'document'>('text')
   const [title, setTitle] = useState('')
@@ -184,19 +184,26 @@ function UploadPanel({ branch, userId, onUpload }: { branch: Branch | null; user
       tags: [],
     }
 
-    const { data } = await (supabase as any).from('memories').insert(payload).select('*, author:profiles!author_id(id, full_name, branch, avatar_url, sprno)').single()
+    const { data, error } = await (supabase as any).from('memories').insert(payload).select('*, author:profiles!author_id(id, full_name, branch, avatar_url, sprno)').single()
     setUploading(false)
     setUploadPct(0)
-    if (data) {
-      onUpload(data)
-      setOpen(false); setTitle(''); setContent(''); setFile(null); setPreview(''); setLinkUrl('')
-      // Fire-and-forget: generate embedding if user has an API key
-      fetch('/api/ai/embed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memoryId: data.id, title: data.title, content: data.content }),
-      }).catch(() => {})
+
+    if (error || !data) {
+      setUploadErr(error?.message ?? 'Failed to post memory. Please try again.')
+      return
     }
+
+    onUpload(data)
+    onPosted()  // reset year filter so the new memory is always visible
+    setOpen(false)
+    setTitle(''); setContent(''); setFile(null); setPreview(''); setLinkUrl(''); setYear('')
+
+    // Fire-and-forget: generate embedding if user has an API key
+    fetch('/api/ai/embed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memoryId: data.id, title: data.title, content: data.content }),
+    }).catch(() => {})
   }
 
   if (!open) return (
@@ -322,6 +329,13 @@ export default function BranchWallClient({
   const [filterYear, setFilterYear] = useState<number | 'all'>('all')
   const meta = branch ? BRANCH_META[branch] : null
 
+  // Only show years that actually have memories — avoids 30 filter buttons
+  const yearsWithMemories = useMemo(() =>
+    [...new Set(memories.map(m => m.year_of_memory).filter(Boolean) as number[])]
+      .sort((a, b) => b - a),
+    [memories]
+  )
+
   async function handleReact(memoryId: string, emoji: string) {
     const supabase = createClient()
     const existing = await (supabase as any).from('reactions').select('id').eq('memory_id', memoryId).eq('user_id', currentProfile.id).eq('emoji', emoji).single()
@@ -352,22 +366,29 @@ export default function BranchWallClient({
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-heading)' }}>All Branch Memories</h1>
         )}
 
-        {/* Year filter */}
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setFilterYear('all')}
-            className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', filterYear === 'all' ? 'text-white' : 'text-slate-400 bg-white/5 hover:text-white')}
-            style={filterYear === 'all' ? { background: meta?.color ?? '#6366f1' } : {}}>All Years</button>
-          {YEARS.map(y => (
-            <button key={y} onClick={() => setFilterYear(y)}
-              className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', filterYear === y ? 'text-white' : 'text-slate-400 bg-white/5 hover:text-white')}
-              style={filterYear === y ? { background: meta?.color ?? '#6366f1' } : {}}>{y}</button>
-          ))}
-        </div>
+        {/* Year filter — shows only years that have actual memories */}
+        {yearsWithMemories.length > 0 && (
+          <div className="flex gap-2 flex-wrap mt-3">
+            <button onClick={() => setFilterYear('all')}
+              className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', filterYear === 'all' ? 'text-white' : 'text-slate-400 bg-white/5 hover:text-white')}
+              style={filterYear === 'all' ? { background: meta?.color ?? '#6366f1' } : {}}>All Years</button>
+            {yearsWithMemories.map(y => (
+              <button key={y} onClick={() => setFilterYear(y)}
+                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', filterYear === y ? 'text-white' : 'text-slate-400 bg-white/5 hover:text-white')}
+                style={filterYear === y ? { background: meta?.color ?? '#6366f1' } : {}}>{y}</button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Upload */}
       <div className="mb-6">
-        <UploadPanel branch={branch} userId={currentProfile.id} onUpload={m => setMemories(prev => [m, ...prev])} />
+        <UploadPanel
+          branch={branch}
+          userId={currentProfile.id}
+          onUpload={m => setMemories(prev => [m, ...prev])}
+          onPosted={() => setFilterYear('all')}
+        />
       </div>
 
       {/* Feed */}
