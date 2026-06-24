@@ -9,10 +9,14 @@ import { branchColor, getInitials } from '@/lib/utils'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
+function normalizeLocation(s: string): string {
+  return s.trim().replace(/\b\w/g, c => c.toUpperCase())
+}
+
 function groupByCountry(alumni: Profile[]) {
   const map: Record<string, Profile[]> = {}
   for (const a of alumni) {
-    const key = a.country ?? 'Unknown'
+    const key = a.country ? normalizeLocation(a.country) : 'Unknown'
     if (!map[key]) map[key] = []
     map[key].push(a)
   }
@@ -35,7 +39,9 @@ export default function MapClient({ alumni, currentUserHasLocation }: { alumni: 
 
   const withCoords = useMemo(() => filtered.filter(a => a.lat != null && a.lng != null), [filtered])
   const byCountry = useMemo(() => groupByCountry(filtered), [filtered])
-  const selectedAlumni = selectedCountry ? filtered.filter(a => a.country === selectedCountry) : []
+  const selectedAlumni = selectedCountry
+    ? filtered.filter(a => (a.country ? normalizeLocation(a.country) : 'Unknown') === selectedCountry)
+    : []
 
   const handleMarkerEnter = useCallback((a: Profile, e: React.MouseEvent) => {
     setTooltip({ name: a.full_name, branch: a.branch, city: a.city, x: e.clientX, y: e.clientY })
@@ -228,7 +234,7 @@ export default function MapClient({ alumni, currentUserHasLocation }: { alumni: 
                   <div>
                     <div className="text-white text-sm font-medium">{country}</div>
                     <div className="text-slate-500 text-xs">
-                      {[...new Set(members.map(m => m.city).filter(Boolean))].slice(0, 3).join(', ')}
+                      {[...new Set(members.map(m => m.city ? normalizeLocation(m.city) : null).filter(Boolean))].slice(0, 3).join(', ')}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -289,7 +295,10 @@ export default function MapClient({ alumni, currentUserHasLocation }: { alumni: 
                   <div className="space-y-2.5">
                     {Object.entries(
                       filtered.reduce<Record<string, number>>((acc, a) => {
-                        if (a.city) acc[a.city] = (acc[a.city] ?? 0) + 1
+                        if (a.city) {
+                          const city = normalizeLocation(a.city)
+                          acc[city] = (acc[city] ?? 0) + 1
+                        }
                         return acc
                       }, {})
                     ).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([city, count]) => (
