@@ -1,11 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
-import { Calendar, MapPin, Users, Check, Clock, X, Upload, Camera } from 'lucide-react'
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, format } from 'date-fns'
+import { Calendar, MapPin, Users, Check, Clock, X, Upload, Camera, Download, Share2 } from 'lucide-react'
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
-import { BRANCH_META, type Profile, type ReunionEvent, type RSVP, type RSVPStatus, type ThenNowPhoto } from '@/types/database'
+import { BRANCH_META, type Branch, type Profile, type ReunionEvent, type RSVP, type RSVPStatus, type ThenNowPhoto } from '@/types/database'
 import { branchColor, getInitials } from '@/lib/utils'
 
 const REUNION_DATE = new Date('2026-06-27T09:00:00+05:30')
@@ -48,7 +48,10 @@ function Countdown() {
   )
 }
 
-function RSVPWidget({ event, myRsvp, userId }: { event: ReunionEvent; myRsvp: RSVP | null; userId: string }) {
+function RSVPWidget({ event, myRsvp, userId, onStatusChange }: {
+  event: ReunionEvent; myRsvp: RSVP | null; userId: string
+  onStatusChange?: (s: RSVPStatus) => void
+}) {
   const [status, setStatus] = useState<RSVPStatus | null>(myRsvp?.status ?? null)
   const [saving, setSaving] = useState(false)
 
@@ -65,6 +68,7 @@ function RSVPWidget({ event, myRsvp, userId }: { event: ReunionEvent; myRsvp: RS
       await (supabase as any).from('rsvps').insert({ event_id: event.id, user_id: userId, status: s })
     }
     setStatus(s)
+    onStatusChange?.(s)
     setSaving(false)
   }
 
@@ -217,6 +221,162 @@ function ThenNowUpload({ userId, onUpload }: { userId: string; onUpload: (p: The
   )
 }
 
+function ReunionPass({ profile }: { profile: Profile }) {
+  const passRef = useRef<HTMLDivElement>(null)
+  const [generating, setGenerating] = useState(false)
+  const color = branchColor(profile.branch as Branch | undefined)
+  const initials = getInitials(profile.full_name ?? '')
+
+  async function capture() {
+    if (!passRef.current) return null
+    try {
+      const { toPng } = await import('html-to-image')
+      return await toPng(passRef.current, { pixelRatio: 2, cacheBust: true })
+    } catch { return null }
+  }
+
+  async function handleDownload() {
+    setGenerating(true)
+    const dataUrl = await capture()
+    if (dataUrl) {
+      const a = document.createElement('a')
+      a.download = `MCE-Reunion-Pass-${profile.full_name ?? 'Alumni'}.png`
+      a.href = dataUrl
+      a.click()
+    }
+    setGenerating(false)
+  }
+
+  async function handleShare() {
+    setGenerating(true)
+    const dataUrl = await capture()
+    if (!dataUrl) { setGenerating(false); return }
+    try {
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      const file = new File([blob], 'MCE-Reunion-Pass.png', { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'MCE Silver Reunion 2026 🎓',
+          text: `I'm attending the MCE 25th Year Silver Reunion on 27 June 2026! 🎉`,
+        })
+      } else {
+        const text = encodeURIComponent(`🎓 I'm attending the MCE 25th Year Silver Reunion on 27 June 2026 at MCE, Pudukkottai! Join us → https://mce25.vercel.app`)
+        window.open(`https://wa.me/?text=${text}`, '_blank')
+      }
+    } catch { /* user cancelled */ }
+    setGenerating(false)
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, type: 'spring' }}>
+      <p className="text-xs text-slate-400 mb-3 text-center uppercase tracking-widest font-medium">🎟️ Your Reunion Pass</p>
+
+      {/* Pass card — inline styles for reliable image capture */}
+      <div ref={passRef} style={{
+        background: 'linear-gradient(145deg,#05080f 0%,#0d1020 60%,#100810 100%)',
+        border: '1px solid rgba(234,179,8,0.4)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
+        boxShadow: '0 0 40px rgba(234,179,8,0.15)',
+      }}>
+        {/* Gold top stripe */}
+        <div style={{ height: '4px', background: 'linear-gradient(90deg,#d97706,#eab308,#fbbf24,#eab308,#d97706)' }} />
+
+        {/* Header */}
+        <div style={{ padding: '18px 24px 14px', textAlign: 'center', borderBottom: '1px dashed rgba(234,179,8,0.2)' }}>
+          <div style={{ fontSize: '26px', marginBottom: '6px' }}>🎓</div>
+          <div style={{ color: '#fbbf24', fontSize: '11px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+            MCE Silver Reunion
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', letterSpacing: '0.12em', marginTop: '3px' }}>
+            25TH YEAR ANNIVERSARY · CLASS OF 2001
+          </div>
+        </div>
+
+        {/* Member details */}
+        <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', gap: '14px', borderBottom: '1px dashed rgba(234,179,8,0.2)' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0,
+            background: `${color}25`, border: `2px solid ${color}55`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '18px', fontWeight: 700, color,
+          }}>
+            {initials}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {profile.full_name}
+            </div>
+            <div style={{ color, fontSize: '12px', fontWeight: 600, marginBottom: '2px' }}>
+              {profile.branch} Department
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>
+              SPRNO: {profile.sprno}
+            </div>
+          </div>
+        </div>
+
+        {/* Event details */}
+        <div style={{ padding: '14px 24px', borderBottom: '1px dashed rgba(234,179,8,0.2)' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', marginTop: '1px' }}>📅</span>
+            <div>
+              <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: 600 }}>27 June 2026, Saturday</div>
+              <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '11px' }}>9:00 AM onwards</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '12px', marginTop: '1px' }}>📍</span>
+            <div>
+              <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: 600 }}>Mookambigai College of Engineering</div>
+              <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '11px' }}>Pudukkottai, Tamil Nadu</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Badge + URL */}
+        <div style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)',
+            borderRadius: '20px', padding: '4px 12px',
+          }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
+            <span style={{ color: '#4ade80', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Attending · Admit One
+            </span>
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: '10px', letterSpacing: '0.08em' }}>
+            mce25.vercel.app
+          </div>
+        </div>
+
+        {/* Gold bottom stripe */}
+        <div style={{ height: '4px', background: 'linear-gradient(90deg,#d97706,#eab308,#fbbf24,#eab308,#d97706)' }} />
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2 mt-3">
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={handleShare} disabled={generating}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg,#25d366,#128c7e)' }}>
+          <Share2 className="w-4 h-4" />
+          {generating ? 'Preparing…' : 'Share on WhatsApp'}
+        </motion.button>
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={handleDownload} disabled={generating}
+          className="px-4 py-2.5 rounded-xl text-slate-300 disabled:opacity-60 glass flex items-center">
+          <Download className="w-4 h-4" />
+        </motion.button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function ReunionClient({
   event, profile, thenNowPhotos: initialPhotos, myRsvp,
 }: {
@@ -226,6 +386,7 @@ export default function ReunionClient({
   myRsvp: RSVP | null
 }) {
   const [photos, setPhotos] = useState(initialPhotos)
+  const [rsvpStatus, setRsvpStatus] = useState<RSVPStatus | null>(myRsvp?.status ?? null)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -308,9 +469,16 @@ export default function ReunionClient({
 
         {/* Sidebar */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Reunion Pass — shown after RSVP attending */}
+          <AnimatePresence>
+            {rsvpStatus === 'attending' && (
+              <ReunionPass profile={profile} />
+            )}
+          </AnimatePresence>
+
           {event && (
             <div id="rsvp">
-              <RSVPWidget event={event} myRsvp={myRsvp} userId={profile.id} />
+              <RSVPWidget event={event} myRsvp={myRsvp} userId={profile.id} onStatusChange={setRsvpStatus} />
             </div>
           )}
           {!event && (
