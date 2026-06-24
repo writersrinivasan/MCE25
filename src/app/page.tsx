@@ -299,7 +299,7 @@ export default function LandingPage() {
           <div className="relative">
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-violet-500 via-blue-500 to-transparent opacity-30" />
             {[
-              { year: '1997', text: 'We walked through MCE\'s gates as nervous freshers — 309 of us from across Tamil Nadu.' },
+              { year: '1997', text: 'We walked through MCE\'s gates as nervous freshers — 309 of us from across South India.' },
               { year: '1999', text: 'Mid-term magic: canteen debates, project crises, friendships forged in all-nighters.' },
               { year: '2001', text: 'We graduated. Threw our hats. Said goodbye, not knowing it would be for this long.' },
               { year: '2026', text: 'We reunite. 25 years later, same friends, a few more grey hairs, infinite stories.' },
