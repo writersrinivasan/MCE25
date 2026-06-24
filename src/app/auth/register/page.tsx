@@ -23,39 +23,48 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const result = await verifyWhitelist(sprno)
-    setLoading(false)
-    if (!result.success || !result.data) {
-      setError(result.error ?? 'SPRNO not found.')
-    } else {
-      setAlumniData(result.data)
-      setStep('register')
+    try {
+      const result = await verifyWhitelist(sprno.trim())
+      if (!result.success || !result.data) {
+        setError(result.error ?? 'SPRNO not found. Please check and try again.')
+      } else {
+        setAlumniData(result.data)
+        setStep('register')
+      }
+    } catch {
+      setError('Connection error. Please check your internet and try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (!alumniData) return
-    setError('')
-    setLoading(true)
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
-      setLoading(false)
       return
     }
-    const result = await registerAlumni({
-      sprno: alumniData.sprno,
-      email,
-      password,
-      name: alumniData.name,
-      branch: alumniData.dept,
-      batch_year: alumniData.batch_year,
-    })
-    setLoading(false)
-    if (!result.success) {
-      setError(result.error ?? 'Registration failed.')
-    } else {
-      setStep('done')
+    setError('')
+    setLoading(true)
+    try {
+      const result = await registerAlumni({
+        sprno: alumniData.sprno,
+        email,
+        password,
+        name: alumniData.name,
+        branch: alumniData.dept,
+        batch_year: alumniData.batch_year,
+      })
+      if (!result.success) {
+        setError(result.error ?? 'Registration failed. Please try again.')
+      } else {
+        setStep('done')
+      }
+    } catch {
+      setError('Connection error. Please check your internet and try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -209,8 +218,8 @@ export default function RegisterPage() {
                   <CheckCircle className="w-10 h-10 text-green-400" />
                 </motion.div>
                 <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-heading)' }}>Welcome to the Family!</h2>
-                <p className="text-slate-400 mb-1">Check your email to verify your account.</p>
-                <p className="text-slate-500 text-sm mb-6">Your profile will be activated once approved.</p>
+                <p className="text-slate-400 mb-1">Your account is active — sign in now.</p>
+                <p className="text-slate-500 text-sm mb-6">Complete your profile to appear on the alumni map and directory.</p>
                 <Link href="/auth/login">
                   <button className="px-6 py-3 rounded-xl font-semibold text-white" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
                     Go to Sign In
