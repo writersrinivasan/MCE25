@@ -103,8 +103,6 @@ export default function OnboardingPage() {
           full_name: profile.full_name ?? '',
           branch: profile.branch ?? '',
           graduation_year: profile.graduation_year ?? null,
-          status: 'approved',
-          role: 'member',
           ...fields,
         })
         if (insertErr) throw new Error(insertErr.message)
