@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import {
-  LayoutDashboard, Users, Image, Trophy, Map, Menu, X, LogOut, User, ChevronDown, Shield, Search, Settings
+  LayoutDashboard, Users, Image, Trophy, Map, Menu, X, LogOut, User, ChevronDown, Shield, Search, Settings, Mail
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { BRANCH_META, type Profile } from '@/types/database'
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/search', label: 'AI Search', icon: Search },
   { href: '/directory', label: 'Directory', icon: Users },
   { href: '/reunion', label: 'Reunion', icon: Trophy },
+  { href: '/capsule', label: 'Capsule', icon: Mail },
   { href: '/map', label: 'Map', icon: Map },
 ]
 
