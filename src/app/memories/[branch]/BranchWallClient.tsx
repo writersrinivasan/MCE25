@@ -39,12 +39,18 @@ function MemoryCard({ memory, currentUserId, onReact }: { memory: Memory; curren
     >
       {/* Media */}
       {memory.media_url && memory.media_type === 'image' && (
-        <div className="w-full h-52 overflow-hidden bg-white/5">
-          <img src={memory.media_url} alt={memory.title ?? ''} className="w-full h-full object-cover" />
+        <div className="w-full bg-black/40 flex items-center justify-center">
+          <img
+            src={memory.media_url}
+            alt={memory.title ?? ''}
+            className="w-full h-auto max-h-[500px] object-contain"
+          />
         </div>
       )}
       {memory.media_url && memory.media_type === 'video' && (
-        <video src={memory.media_url} controls className="w-full max-h-64 object-cover bg-black" />
+        <div className="w-full bg-black">
+          <video src={memory.media_url} controls className="w-full max-h-[400px] object-contain" />
+        </div>
       )}
       {memory.link_url && (
         <a href={memory.link_url} target="_blank" rel="noopener noreferrer"
@@ -272,8 +278,8 @@ function UploadPanel({ branch, userId, onUpload, onPosted }: { branch: Branch | 
         <div {...getRootProps()} className={cn('border-2 border-dashed rounded-xl p-6 text-center mb-3 cursor-pointer transition-colors',
           isDragActive ? 'border-violet-500 bg-violet-500/10' : 'border-white/10 hover:border-white/20')}>
           <input {...getInputProps()} />
-          {preview && type === 'image' && <img src={preview} alt="" className="w-full max-h-40 object-cover rounded-lg mb-2" />}
-          {preview && type === 'video' && <video src={preview} className="w-full max-h-40 rounded-lg mb-2" />}
+          {preview && type === 'image' && <img src={preview} alt="" className="w-full max-h-60 object-contain rounded-lg mb-2 bg-black/20" />}
+          {preview && type === 'video' && <video src={preview} className="w-full max-h-60 object-contain rounded-lg mb-2 bg-black" />}
           {!preview && <>
             <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
             <div className="text-slate-400 text-sm">Drop a file or click to browse</div>

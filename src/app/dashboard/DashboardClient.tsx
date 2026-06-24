@@ -206,8 +206,8 @@ function MemoryCard({ memory }: { memory: Memory }) {
       style={{ borderColor: `${color}20` }}
     >
       {memory.media_url && memory.media_type === 'image' && (
-        <div className="w-full h-32 rounded-lg overflow-hidden mb-3 bg-white/5">
-          <img src={memory.media_url} alt="" className="w-full h-full object-cover" />
+        <div className="w-full rounded-lg overflow-hidden mb-3 bg-black/30 flex items-center justify-center">
+          <img src={memory.media_url} alt="" className="w-full h-auto max-h-40 object-contain" />
         </div>
       )}
       {memory.title && <div className="text-white text-sm font-semibold mb-1 line-clamp-2">{memory.title}</div>}

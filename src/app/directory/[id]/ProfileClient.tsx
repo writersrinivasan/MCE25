@@ -105,7 +105,9 @@ export default function ProfileClient({
             {memories.map(m => (
               <motion.div key={m.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-xl overflow-hidden">
                 {m.media_url && m.media_type === 'image' && (
-                  <img src={m.media_url} alt={m.title ?? ''} className="w-full h-40 object-cover" />
+                  <div className="w-full bg-black/30 flex items-center justify-center">
+                    <img src={m.media_url} alt={m.title ?? ''} className="w-full h-auto max-h-48 object-contain" />
+                  </div>
                 )}
                 <div className="p-4">
                   {m.title && <div className="text-white font-medium text-sm mb-1">{m.title}</div>}
