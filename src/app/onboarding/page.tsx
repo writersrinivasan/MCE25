@@ -58,62 +58,65 @@ export default function OnboardingPage() {
     if (step < STEPS.length - 1) { setStep(s => s + 1); return }
     setSaving(true)
     setSaveError('')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/auth/login'); return }
 
-    let avatar_url = profile.avatar_url ?? null
-    if (avatarFile) {
-      const ext = avatarFile.name.split('.').pop()
-      const result = await uploadFile('avatars', `${user.id}/avatar.${ext}`, avatarFile, setUploadProgress, true)
-      if ('error' in result) { setUploadError(result.error); setSaving(false); return }
-      avatar_url = result.url
-    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/auth/login'; return }
 
-    const payload = {
-      avatar_url,
-      bio: profile.bio ?? null,
-      city: profile.city ?? null,
-      country: profile.country ?? null,
-      lat: profile.lat ?? null,
-      lng: profile.lng ?? null,
-      current_position: profile.current_position ?? null,
-      company: profile.company ?? null,
-      linkedin_url: profile.linkedin_url ?? null,
-      phone: profile.phone ?? null,
-      is_profile_complete: true,
-      updated_at: new Date().toISOString(),
-    }
-
-    // Try UPDATE first (works for existing profiles without touching role/status)
-    const { error: updateErr, count } = await (supabase as any)
-      .from('profiles')
-      .update(payload)
-      .eq('id', user.id)
-      .select('id', { count: 'exact', head: true })
-
-    if (updateErr || count === 0) {
-      // Profile doesn't exist yet — insert it (trigger must have failed)
-      const { error: insertErr } = await (supabase as any).from('profiles').insert({
-        id: user.id,
-        email: user.email,
-        sprno: profile.sprno ?? '',
-        full_name: profile.full_name ?? '',
-        branch: profile.branch ?? '',
-        graduation_year: profile.graduation_year ?? null,
-        status: 'approved',
-        role: 'member',
-        ...payload,
-      })
-      if (insertErr) {
-        setSaveError('Could not save profile: ' + insertErr.message)
-        setSaving(false)
-        return
+      let avatar_url = profile.avatar_url ?? null
+      if (avatarFile) {
+        const ext = avatarFile.name.split('.').pop()
+        const result = await uploadFile('avatars', `${user.id}/avatar.${ext}`, avatarFile, setUploadProgress, true)
+        if ('error' in result) { setUploadError(result.error); setSaving(false); return }
+        avatar_url = result.url
       }
-    }
 
-    setSaving(false)
-    router.push('/dashboard?welcome=1')
-    router.refresh()
+      const fields = {
+        avatar_url,
+        bio: profile.bio ?? null,
+        city: profile.city ?? null,
+        country: profile.country ?? null,
+        lat: profile.lat ?? null,
+        lng: profile.lng ?? null,
+        current_position: profile.current_position ?? null,
+        company: profile.company ?? null,
+        linkedin_url: profile.linkedin_url ?? null,
+        phone: profile.phone ?? null,
+        is_profile_complete: true,
+        updated_at: new Date().toISOString(),
+      }
+
+      // UPDATE existing profile row
+      const { data: updated, error: updateErr } = await (supabase as any)
+        .from('profiles')
+        .update(fields)
+        .eq('id', user.id)
+        .select('id')
+
+      if (updateErr) throw new Error(updateErr.message)
+
+      // If no profile existed (trigger never ran), insert one now
+      if (!updated || updated.length === 0) {
+        const { error: insertErr } = await (supabase as any).from('profiles').insert({
+          id: user.id,
+          email: user.email ?? '',
+          sprno: profile.sprno ?? '',
+          full_name: profile.full_name ?? '',
+          branch: profile.branch ?? '',
+          graduation_year: profile.graduation_year ?? null,
+          status: 'approved',
+          role: 'member',
+          ...fields,
+        })
+        if (insertErr) throw new Error(insertErr.message)
+      }
+
+      // Hard redirect — forces middleware to re-read DB fresh
+      window.location.href = '/dashboard?welcome=1'
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.')
+      setSaving(false)
+    }
   }
 
   const update = (key: keyof Profile, val: string) => setProfile(p => ({ ...p, [key]: val }))
