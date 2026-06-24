@@ -69,6 +69,201 @@ const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
   size: 4 + (i % 3) * 4,
 }))
 
+const SPARKLES = [
+  { x: 3,  y: 25, delay: 0,   color: '#eab308', size: 10 },
+  { x: 12, y: 75, delay: 0.8, color: '#f97316', size: 7  },
+  { x: 22, y: 10, delay: 1.5, color: '#fbbf24', size: 12 },
+  { x: 42, y: 88, delay: 0.3, color: '#eab308', size: 7  },
+  { x: 58, y: 8,  delay: 2.0, color: '#f59e0b', size: 10 },
+  { x: 72, y: 72, delay: 0.6, color: '#fbbf24', size: 7  },
+  { x: 83, y: 22, delay: 1.2, color: '#eab308', size: 12 },
+  { x: 94, y: 62, delay: 1.8, color: '#f97316', size: 7  },
+  { x: 33, y: 55, delay: 2.5, color: '#fbbf24', size: 10 },
+  { x: 68, y: 38, delay: 0.9, color: '#eab308', size: 7  },
+  { x: 50, y: 3,  delay: 1.1, color: '#f59e0b', size: 10 },
+  { x: 8,  y: 90, delay: 2.2, color: '#fbbf24', size: 7  },
+  { x: 88, y: 88, delay: 0.4, color: '#eab308', size: 10 },
+  { x: 48, y: 95, delay: 1.6, color: '#f97316', size: 7  },
+]
+
+function SparkleParticle({ x, y, delay, color, size }: { x: number; y: number; delay: number; color: string; size: number }) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{ left: `${x}%`, top: `${y}%` }}
+      animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0], rotate: [0, 180, 360] }}
+      transition={{ duration: 2.5, delay, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
+    >
+      <svg width={size} height={size} viewBox="0 0 12 12" fill={color}>
+        <path d="M6 0L7.2 4.8H12L8.4 7.6L9.6 12L6 9.4L2.4 12L3.6 7.6L0 4.8H4.8Z" />
+      </svg>
+    </motion.div>
+  )
+}
+
+const TICKER_TEXT = "  🎉  MCE 25th Year Silver Reunion  ·  27 June 2026  ·  IT'S HAPPENING!  ·  309 Alumni Reuniting  ·  5 Legendary Branches  ·  One Unforgettable Day  ·  Register NOW!  🌟  "
+
+function AnnouncementTicker() {
+  return (
+    <div className="overflow-hidden relative z-50" style={{ background: 'linear-gradient(90deg,#4c1d95,#3730a3,#4c1d95)', borderBottom: '1px solid rgba(167,139,250,0.2)' }}>
+      <motion.div
+        className="flex whitespace-nowrap py-2.5"
+        style={{ width: 'max-content' }}
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
+      >
+        <span className="inline-block text-sm font-semibold tracking-wide px-2" style={{ color: '#fde68a' }}>{TICKER_TEXT}</span>
+        <span className="inline-block text-sm font-semibold tracking-wide px-2" style={{ color: '#fde68a' }}>{TICKER_TEXT}</span>
+      </motion.div>
+    </div>
+  )
+}
+
+const DATE_PARTS = [
+  { value: '27',   label: 'Day' },
+  { value: 'JUN',  label: 'Month' },
+  { value: '2026', label: 'Year' },
+]
+
+function ReunionAnnouncement() {
+  return (
+    <section className="py-20 px-4 relative overflow-hidden" style={{ background: '#05080f' }}>
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(234,179,8,0.08), transparent)' }} />
+      {SPARKLES.map((s, i) => <SparkleParticle key={i} {...s} />)}
+
+      <div className="max-w-4xl mx-auto relative">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="relative rounded-3xl p-8 md:p-14 text-center"
+          style={{
+            background: 'rgba(234,179,8,0.04)',
+            border: '1px solid rgba(234,179,8,0.25)',
+            boxShadow: '0 0 80px rgba(234,179,8,0.12), 0 0 160px rgba(234,179,8,0.05)',
+          }}
+        >
+          <motion.div
+            className="absolute inset-0 rounded-3xl pointer-events-none"
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ boxShadow: '0 0 40px rgba(234,179,8,0.12)' }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full mb-6 text-xs font-bold uppercase tracking-[0.2em]"
+            style={{ background: 'rgba(234,179,8,0.12)', border: '1px solid rgba(234,179,8,0.35)', color: '#fbbf24' }}
+          >
+            <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>🎓</motion.span>
+            Save The Date
+            <motion.span animate={{ rotate: [0, -15, 15, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1.4 }}>🎓</motion.span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-5xl md:text-7xl font-bold mb-2 leading-none"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            <motion.span
+              style={{
+                background: 'linear-gradient(135deg,#fbbf24,#f59e0b,#d97706)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                display: 'block',
+              }}
+              animate={{ filter: ['brightness(1)', 'brightness(1.25)', 'brightness(1)'] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              It&apos;s Happening!
+            </motion.span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.35 }}
+            className="text-slate-300 text-lg mb-8"
+          >
+            MCE Silver Reunion · 25th Year Anniversary
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.45 }}
+            className="flex items-end justify-center gap-4 mb-8"
+          >
+            {DATE_PARTS.map(({ value, label }, i) => (
+              <div key={label} className="flex flex-col items-center gap-1.5">
+                <motion.div
+                  className="px-5 py-3 rounded-2xl text-center"
+                  style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', minWidth: '4.5rem' }}
+                  animate={{ borderColor: ['rgba(234,179,8,0.3)', 'rgba(234,179,8,0.65)', 'rgba(234,179,8,0.3)'] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
+                >
+                  <div className="text-4xl md:text-5xl font-bold" style={{ color: '#fbbf24', fontFamily: 'var(--font-heading)' }}>{value}</div>
+                </motion.div>
+                <span className="text-slate-500 text-xs uppercase tracking-widest">{label}</span>
+              </div>
+            ))}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.55 }}
+            className="text-slate-400 text-base md:text-lg mb-8 max-w-lg mx-auto"
+          >
+            &ldquo;The batch that stuck together &mdash;{' '}
+            <span style={{ color: '#fbbf24' }}>coming back to where it all began.</span>&rdquo;
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.65 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center"
+          >
+            <Link href="/auth/register">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-8 py-3.5 rounded-xl font-bold text-base flex items-center gap-2 mx-auto sm:mx-0 text-black"
+                style={{ background: 'linear-gradient(135deg,#d97706,#eab308)' }}
+              >
+                🎉 Secure Your Spot <ArrowRight className="w-4 h-4" />
+              </motion.button>
+            </Link>
+            <Link href="/reunion">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-8 py-3.5 rounded-xl font-semibold text-base text-amber-300 mx-auto sm:mx-0"
+                style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.3)' }}
+              >
+                View Details
+              </motion.button>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
@@ -77,6 +272,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative overflow-x-hidden">
+      <AnnouncementTicker />
       {/* Hero */}
       <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
         {/* Gradient background */}
@@ -189,6 +385,8 @@ export default function LandingPage() {
           Scroll
         </motion.div>
       </section>
+
+      <ReunionAnnouncement />
 
       {/* Branch showcase */}
       <section className="py-24 px-4 relative">
