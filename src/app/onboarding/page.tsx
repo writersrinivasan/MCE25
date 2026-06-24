@@ -99,7 +99,6 @@ export default function OnboardingPage() {
       if (!updated || updated.length === 0) {
         const { error: insertErr } = await (supabase as any).from('profiles').insert({
           id: user.id,
-          email: user.email ?? '',
           sprno: profile.sprno ?? '',
           full_name: profile.full_name ?? '',
           branch: profile.branch ?? '',
