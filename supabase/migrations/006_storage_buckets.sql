@@ -1,20 +1,25 @@
 -- Migration 006: Create storage buckets for file uploads
--- Run this in Supabase → SQL Editor
+-- Idempotent — safe to run multiple times
 
--- 1. Create buckets (public = files are readable without auth via signed URL)
+-- 1. Create / update buckets
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES
-  ('avatars', 'avatars', true,  5242880,  ARRAY['image/jpeg','image/png','image/webp','image/gif']),
-  ('memories', 'memories', true, 52428800, ARRAY['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','audio/mpeg','audio/wav','application/pdf']),
-  ('reunion',  'reunion',  true, 10485760, ARRAY['image/jpeg','image/png','image/webp','image/gif'])
+  ('avatars',  'avatars',  true,  5242880,  ARRAY['image/jpeg','image/png','image/webp','image/gif']),
+  ('memories', 'memories', true, 52428800,  ARRAY['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','audio/mpeg','audio/wav','application/pdf']),
+  ('reunion',  'reunion',  true, 10485760,  ARRAY['image/jpeg','image/png','image/webp','image/gif'])
 ON CONFLICT (id) DO UPDATE SET
-  public = EXCLUDED.public,
-  file_size_limit = EXCLUDED.file_size_limit,
+  public             = EXCLUDED.public,
+  file_size_limit    = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- 2. Storage RLS policies
+-- 2. Storage RLS policies — drop first so re-runs don't fail
 
--- avatars: anyone can read, authenticated users can upload to their own folder
+-- avatars
+DROP POLICY IF EXISTS "Avatar images are publicly readable"    ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload their own avatar"      ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar"      ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own avatar"      ON storage.objects;
+
 CREATE POLICY "Avatar images are publicly readable"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'avatars');
@@ -31,7 +36,11 @@ CREATE POLICY "Users can delete their own avatar"
   ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
 
--- memories: anyone can read, approved members can upload
+-- memories
+DROP POLICY IF EXISTS "Memory files are publicly readable"        ON storage.objects;
+DROP POLICY IF EXISTS "Approved members can upload memory files"  ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own memory files"   ON storage.objects;
+
 CREATE POLICY "Memory files are publicly readable"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'memories');
@@ -53,7 +62,11 @@ CREATE POLICY "Users can delete their own memory files"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- reunion: anyone can read, approved members can upload
+-- reunion
+DROP POLICY IF EXISTS "Reunion files are publicly readable"        ON storage.objects;
+DROP POLICY IF EXISTS "Approved members can upload reunion files"  ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own reunion files"   ON storage.objects;
+
 CREATE POLICY "Reunion files are publicly readable"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'reunion');
