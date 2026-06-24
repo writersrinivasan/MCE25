@@ -561,7 +561,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-10 px-4 text-center text-slate-500 text-sm">
         <div className="max-w-4xl mx-auto">
-          <div className="text-2xl mb-2" style={{ fontFamily: 'var(--font-heading)', color: '#6366f1' }}>MCE '97–'01</div>
+          <div className="text-2xl mb-2" style={{ fontFamily: 'var(--font-heading)', color: '#6366f1' }}>MCE Silver</div>
           <p>Mookambigai College of Engineering · Silver Reunion 2026 · Made with ❤️ for the batch</p>
           <p className="mt-2">Reunion Date: 27 June 2026</p>
         </div>

@@ -90,7 +90,7 @@ export default function RegisterPage() {
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <Link href="/">
-            <div className="text-3xl font-bold text-gradient mb-1" style={{ fontFamily: 'var(--font-heading)' }}>MCE '97–'01</div>
+            <div className="text-3xl font-bold text-gradient mb-1" style={{ fontFamily: 'var(--font-heading)' }}>MCE Silver</div>
             <div className="text-slate-400 text-sm">Silver Reunion Portal</div>
           </Link>
         </div>

@@ -41,7 +41,7 @@ export function Navbar({ profile }: { profile: Profile | null }) {
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>M</div>
-          <span className="font-bold text-white hidden sm:block" style={{ fontFamily: 'var(--font-heading)' }}>MCE '97–'01</span>
+          <span className="font-bold text-white hidden sm:block" style={{ fontFamily: 'var(--font-heading)' }}>MCE Silver</span>
         </Link>
 
         {/* Desktop nav */}

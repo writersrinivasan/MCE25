@@ -52,7 +52,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <div className="text-3xl font-bold text-gradient mb-1" style={{ fontFamily: 'var(--font-heading)' }}>MCE '97–'01</div>
+            <div className="text-3xl font-bold text-gradient mb-1" style={{ fontFamily: 'var(--font-heading)' }}>MCE Silver</div>
             <div className="text-slate-400 text-sm">Silver Reunion Portal</div>
           </Link>
         </div>
