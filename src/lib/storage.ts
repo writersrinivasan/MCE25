@@ -12,7 +12,8 @@ export async function uploadFile(
   bucket: keyof typeof LIMITS,
   path: string,
   file: File,
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  upsert = false
 ): Promise<UploadResult> {
   if (file.size > LIMITS[bucket]) {
     const mb = (LIMITS[bucket] / 1024 / 1024).toFixed(0)
@@ -30,7 +31,7 @@ export async function uploadFile(
 
   const { data, error } = await (supabase.storage as any)
     .from(bucket)
-    .upload(path, file, { upsert: true, cacheControl: '3600' })
+    .upload(path, file, { upsert, cacheControl: '3600' })
 
   clearInterval(timer)
 

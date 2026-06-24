@@ -48,7 +48,7 @@ export default function OnboardingPage() {
     let avatar_url = profile.avatar_url ?? null
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop()
-      const result = await uploadFile('avatars', `${user.id}/avatar.${ext}`, avatarFile, setUploadProgress)
+      const result = await uploadFile('avatars', `${user.id}/avatar.${ext}`, avatarFile, setUploadProgress, true)
       if ('error' in result) { setUploadError(result.error); setSaving(false); return }
       avatar_url = result.url
     }
