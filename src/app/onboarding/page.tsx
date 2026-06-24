@@ -65,7 +65,7 @@ export default function OnboardingPage() {
       if ('error' in result) { setUploadError(result.error); setSaving(false); return }
       avatar_url = result.url
     }
-    await (supabase as any).from('profiles').upsert({
+    const { error: saveError } = await (supabase as any).from('profiles').upsert({
       id: user.id,
       email: user.email,
       sprno: profile.sprno ?? '',
@@ -88,6 +88,10 @@ export default function OnboardingPage() {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' })
     setSaving(false)
+    if (saveError) {
+      setUploadError('Failed to save profile: ' + saveError.message)
+      return
+    }
     router.push('/dashboard?welcome=1')
     router.refresh()
   }
