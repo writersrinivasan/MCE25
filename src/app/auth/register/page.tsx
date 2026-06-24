@@ -57,7 +57,9 @@ export default function RegisterPage() {
         batch_year: alumniData.batch_year,
       })
       if (!result.success) {
-        setError(result.error ?? 'Registration failed. Please try again.')
+        const msg = typeof result.error === 'string' && result.error
+          ? result.error : 'Registration failed. Please try again.'
+        setError(msg)
       } else {
         setStep('done')
       }
