@@ -28,7 +28,20 @@ export default function OnboardingPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return router.push('/auth/login')
       supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
-        if (data) setProfile(data as Profile)
+        if (data) {
+          setProfile(data as Profile)
+        } else {
+          // Profile wasn't created by trigger — seed from auth metadata
+          const meta = user.user_metadata ?? {}
+          setProfile({
+            id: user.id,
+            email: user.email ?? '',
+            sprno: meta.sprno ?? '',
+            full_name: meta.name ?? '',
+            branch: meta.branch ?? '',
+            graduation_year: meta.batch_year ? Number(meta.batch_year) + 4 : undefined,
+          } as Partial<Profile>)
+        }
       })
     })
   }, [])
@@ -52,7 +65,15 @@ export default function OnboardingPage() {
       if ('error' in result) { setUploadError(result.error); setSaving(false); return }
       avatar_url = result.url
     }
-    await (supabase as any).from('profiles').update({
+    await (supabase as any).from('profiles').upsert({
+      id: user.id,
+      email: user.email,
+      sprno: profile.sprno ?? '',
+      full_name: profile.full_name ?? '',
+      branch: profile.branch ?? '',
+      graduation_year: profile.graduation_year,
+      status: 'approved',
+      role: 'member',
       avatar_url,
       bio: profile.bio,
       city: profile.city,
@@ -65,7 +86,7 @@ export default function OnboardingPage() {
       phone: profile.phone,
       is_profile_complete: true,
       updated_at: new Date().toISOString(),
-    }).eq('id', user.id)
+    }, { onConflict: 'id' })
     setSaving(false)
     router.push('/dashboard?welcome=1')
     router.refresh()

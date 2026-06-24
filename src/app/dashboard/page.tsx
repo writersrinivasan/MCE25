@@ -18,7 +18,7 @@ export default async function DashboardPage({
   const isWelcome = params?.welcome === '1'
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile) redirect('/auth/login')
+  if (!profile) redirect('/onboarding')
 
   const [
     { data: recentMemories },
