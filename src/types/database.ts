@@ -1,5 +1,5 @@
 export type Branch = 'CSE' | 'ECE' | 'EEE' | 'MECH' | 'PE'
-export type UserRole = 'member' | 'admin' | 'super_admin'
+export type UserRole = 'alumni' | 'branch_admin' | 'super_admin' | 'pending'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type MediaType = 'image' | 'video' | 'audio' | 'document' | 'link'
 export type RSVPStatus = 'attending' | 'maybe' | 'not_attending'

@@ -43,7 +43,7 @@ function MemberRow({ member, onAction }: { member: Member; onAction: (id: string
         {[member.city, member.country].filter(Boolean).join(', ') || '—'}
       </td>
       <td className="px-4 py-3">
-        <span className={cn('text-xs px-2 py-1 rounded-full font-medium', member.role === 'super_admin' ? 'text-red-300 bg-red-500/15' : member.role === 'admin' ? 'text-orange-300 bg-orange-500/15' : 'text-slate-400 bg-white/5')}>
+        <span className={cn('text-xs px-2 py-1 rounded-full font-medium', member.role === 'super_admin' ? 'text-red-300 bg-red-500/15' : member.role === 'branch_admin' ? 'text-orange-300 bg-orange-500/15' : 'text-slate-400 bg-white/5')}>
           {member.role}
         </span>
       </td>
@@ -60,13 +60,13 @@ function MemberRow({ member, onAction }: { member: Member; onAction: (id: string
               <XCircle className="w-4 h-4" />
             </button>
           </>}
-          {member.status === 'approved' && member.role === 'member' && (
+          {member.status === 'approved' && member.role === 'alumni' && (
             <button onClick={() => onAction(member.id, 'make_admin')} title="Make Admin"
               className="p-1.5 rounded-lg text-orange-400 hover:bg-orange-500/15 transition-colors">
               <Shield className="w-4 h-4" />
             </button>
           )}
-          {member.status === 'approved' && member.role === 'admin' && (
+          {member.status === 'approved' && member.role === 'branch_admin' && (
             <button onClick={() => onAction(member.id, 'remove_admin')} title="Remove Admin"
               className="p-1.5 rounded-lg text-slate-400 hover:bg-white/10 transition-colors">
               <Trash2 className="w-4 h-4" />
@@ -104,13 +104,13 @@ export default function MembersClient({ pending: initialPending, approved: initi
       setPending(p => p.filter(m => m.id !== id))
       toast(`❌ ${member.full_name} rejected`)
     } else if (action === 'make_admin') {
-      await (supabase as any).from('profiles').update({ role: 'admin' }).eq('id', id)
-      setApproved(a => a.map(m => m.id === id ? { ...m, role: 'admin' } : m))
+      await (supabase as any).from('profiles').update({ role: 'branch_admin' }).eq('id', id)
+      setApproved(a => a.map(m => m.id === id ? { ...m, role: 'branch_admin' } : m))
       toast(`🛡️ Promoted to admin`)
     } else if (action === 'remove_admin') {
-      await (supabase as any).from('profiles').update({ role: 'member' }).eq('id', id)
-      setApproved(a => a.map(m => m.id === id ? { ...m, role: 'member' } : m))
-      toast(`Demoted to member`)
+      await (supabase as any).from('profiles').update({ role: 'alumni' }).eq('id', id)
+      setApproved(a => a.map(m => m.id === id ? { ...m, role: 'alumni' } : m))
+      toast(`Demoted to alumni`)
     }
   }
 

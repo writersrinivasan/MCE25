@@ -106,7 +106,7 @@ export function Navbar({ profile }: { profile: Profile | null }) {
                         <Settings className="w-4 h-4" /> Settings
                       </div>
                     </Link>
-                    {['admin', 'super_admin'].includes(profile.role) && (
+                    {['branch_admin', 'super_admin'].includes(profile.role) && (
                       <Link href="/admin" onClick={() => setProfileOpen(false)}>
                         <div className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
                           <Shield className="w-4 h-4" /> Admin Panel
