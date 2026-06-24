@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { differenceInDays } from 'date-fns'
 import {
   Users, MapPin, Trophy, Calendar, ArrowRight, Clock, Zap,
-  CheckCircle2, Circle, PartyPopper, X, Image, Sparkles,
+  CheckCircle2, Circle, PartyPopper, X, Image, Sparkles, Megaphone, Pin,
 } from 'lucide-react'
 import { BRANCH_META, type Profile, type Memory, type ReunionEvent } from '@/types/database'
+
+type Announcement = { id: string; title: string; body: string; pinned: boolean; created_at: string }
 import { getInitials, branchColor, timeAgo } from '@/lib/utils'
 
 const REUNION_DATE = new Date('2026-06-27T09:00:00+05:30')
@@ -167,6 +169,48 @@ function GettingStarted({
   )
 }
 
+// ─── Announcements Banner ─────────────────────────────────────────────────────
+function AnnouncementsBanner({ announcements }: { announcements: Announcement[] }) {
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+  const visible = announcements.filter(a => !dismissed.has(a.id))
+  if (visible.length === 0) return null
+  return (
+    <div className="space-y-3 mb-6">
+      <AnimatePresence>
+        {visible.map(a => (
+          <motion.div
+            key={a.id}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            className="relative rounded-2xl px-5 py-4 overflow-hidden"
+            style={a.pinned
+              ? { background: 'linear-gradient(135deg,rgba(239,68,68,0.12),rgba(249,115,22,0.08))', border: '1px solid rgba(239,68,68,0.3)' }
+              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <button
+              onClick={() => setDismissed(d => new Set([...d, a.id]))}
+              className="absolute top-3 right-3 text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-start gap-3 pr-6">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: a.pinned ? 'rgba(239,68,68,0.2)' : 'rgba(99,102,241,0.2)' }}>
+                {a.pinned ? <Pin className="w-4 h-4 text-red-400" /> : <Megaphone className="w-4 h-4 text-violet-400" />}
+              </div>
+              <div>
+                <div className="text-white font-semibold text-sm mb-0.5">{a.title}</div>
+                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ─── Countdown ────────────────────────────────────────────────────────────────
 function CountdownWidget({ event }: { event: ReunionEvent | null }) {
   const now = new Date()
@@ -243,6 +287,7 @@ export default function DashboardClient({
   totalAlumni,
   guidanceData,
   isWelcome,
+  announcements,
 }: {
   profile: Profile
   recentMemories: Memory[]
@@ -250,6 +295,7 @@ export default function DashboardClient({
   totalAlumni: number
   guidanceData: { hasMemory: boolean; hasRSVP: boolean; hasLocation: boolean }
   isWelcome: boolean
+  announcements: Announcement[]
 }) {
   const meta = BRANCH_META[profile.branch]
   const hour = new Date().getHours()
@@ -273,6 +319,9 @@ export default function DashboardClient({
           <WelcomeBanner name={(profile.full_name ?? '').split(' ')[0] || 'Alumni'} branch={profile.branch} />
         )}
       </AnimatePresence>
+
+      {/* Admin announcements — shown to all users */}
+      {announcements.length > 0 && <AnnouncementsBanner announcements={announcements} />}
 
       {/* Greeting */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">

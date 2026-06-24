@@ -5,6 +5,8 @@ import { AppShell } from '@/components/layout/AppShell'
 import DashboardClient from './DashboardClient'
 import type { Profile, Memory, ReunionEvent } from '@/types/database'
 
+type Announcement = { id: string; title: string; body: string; pinned: boolean; created_at: string }
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -26,6 +28,7 @@ export default async function DashboardPage({
     { data: statsData },
     { count: myMemoryCount },
     { data: myRsvp },
+    { data: announcements },
   ] = await Promise.all([
     supabase
       .from('memories')
@@ -41,6 +44,12 @@ export default async function DashboardPage({
     supabase.from('profiles').select('branch', { count: 'exact' }).eq('status', 'approved'),
     supabase.from('memories').select('*', { count: 'exact', head: true }).eq('author_id', user.id),
     supabase.from('rsvps').select('status').eq('user_id', user.id).limit(1).maybeSingle(),
+    (supabase as any)
+      .from('announcements')
+      .select('id, title, body, pinned, created_at')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   const guidanceData = {
@@ -58,6 +67,7 @@ export default async function DashboardPage({
         totalAlumni={statsData?.length ?? 0}
         guidanceData={guidanceData}
         isWelcome={isWelcome}
+        announcements={(announcements ?? []) as Announcement[]}
       />
     </AppShell>
   )

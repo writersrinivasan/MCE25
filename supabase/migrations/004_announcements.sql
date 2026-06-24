@@ -22,17 +22,17 @@ create policy "Approved members can view announcements"
 create policy "Admins can insert announcements"
   on public.announcements for insert
   with check (
-    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('admin','super_admin'))
+    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('branch_admin','super_admin'))
   );
 
 create policy "Admins can update announcements"
   on public.announcements for update
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('admin','super_admin'))
+    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('branch_admin','super_admin'))
   );
 
 create policy "Admins can delete announcements"
   on public.announcements for delete
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('admin','super_admin'))
+    exists (select 1 from public.profiles where id = auth.uid() and role::text in ('branch_admin','super_admin'))
   );
