@@ -14,17 +14,23 @@ export default function AnnouncementsClient({ announcements: initial, authorId }
   const [body, setBody] = useState('')
   const [pinned, setPinned] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [postError, setPostError] = useState('')
 
   async function handlePost() {
     if (!title.trim() || !body.trim()) return
     setSaving(true)
+    setPostError('')
     const supabase = createClient()
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from('announcements')
       .insert({ title: title.trim(), body: body.trim(), pinned, author_id: authorId })
       .select('*, author:profiles!author_id(full_name, branch)')
       .single()
     setSaving(false)
+    if (error) {
+      setPostError(error.message ?? 'Failed to post. Check RLS policies in Supabase.')
+      return
+    }
     if (data) {
       setItems(prev => [data, ...prev])
       setTitle(''); setBody(''); setPinned(false); setShowForm(false)
@@ -83,6 +89,9 @@ export default function AnnouncementsClient({ announcements: initial, authorId }
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
                 />
               </div>
+              {postError && (
+                <div className="text-sm text-red-400 px-1">{postError}</div>
+              )}
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <div onClick={() => setPinned(p => !p)}

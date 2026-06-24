@@ -11,11 +11,15 @@ create table if not exists public.announcements (
 
 alter table public.announcements enable row level security;
 
--- Approved members can read announcements
+-- Approved members and admins can read announcements
 create policy "Approved members can view announcements"
   on public.announcements for select
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and status = 'approved')
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and (status = 'approved' or role::text in ('branch_admin', 'super_admin'))
+    )
   );
 
 -- Only admins can write announcements
