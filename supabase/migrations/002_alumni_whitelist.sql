@@ -1,6 +1,15 @@
 -- MCE Alumni Whitelist — 309 members (1997-2001 batch)
 -- Auto-generated from MCE Master List - 1997 to 2001.xlsx
 
+-- Add any columns that may be missing if the table was created by an earlier migration
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS joining_event TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS tshirt_size  TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS contact_number TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS country      TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS city         TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS dept         TEXT;
+ALTER TABLE alumni_whitelist ADD COLUMN IF NOT EXISTS batch_year   INTEGER;
+
 INSERT INTO alumni_whitelist (sprno, name, contact_number, country, city, joining_event, tshirt_size, dept, batch_year) VALUES
   ('95092','SARAVANAN G','','','','','','ECE',1997),
   ('96027','ARUMUGAM S','','USA','','No','','CSE',1997),
@@ -310,5 +319,6 @@ INSERT INTO alumni_whitelist (sprno, name, contact_number, country, city, joinin
   ('97442','GANESH KANNAN S','','','','','','EEE',1997),
   ('97443','ARAVINTH KUMAR R','','','','','','EEE',1997),
   ('97444','VIJAYARAGHAVAN S','','','','','','EEE',1997),
-  ('97445','RAVINDRA KUMAR B','','','','','','EEE',1997);
+  ('97445','RAVINDRA KUMAR B','','','','','','EEE',1997)
+ON CONFLICT (sprno) DO NOTHING;
 -- Total: 309 alumni
