@@ -1,10 +1,14 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM   = process.env.EMAIL_FROM  ?? 'MCE Silver Reunion <onboarding@resend.dev>'
+const ADMIN  = process.env.ADMIN_EMAIL ?? ''
+const PORTAL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mce25.vercel.app'
 
-const FROM    = process.env.EMAIL_FROM    ?? 'MCE Silver Reunion <onboarding@resend.dev>'
-const ADMIN   = process.env.ADMIN_EMAIL   ?? ''
-const PORTAL  = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mce25.vercel.app'
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) return null
+  return new Resend(key)
+}
 
 // ─── Welcome email to new member ────────────────────────────────────────────
 
@@ -156,7 +160,8 @@ function adminNotifHtml(member: { name: string; email: string; sprno: string; br
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(to: string, name: string, sprno: string, branch: string) {
-  if (!process.env.RESEND_API_KEY) return
+  const resend = getResend()
+  if (!resend) return
   try {
     await resend.emails.send({
       from: FROM,
@@ -172,7 +177,8 @@ export async function sendWelcomeEmail(to: string, name: string, sprno: string, 
 export async function sendAdminNotification(member: {
   name: string; email: string; sprno: string; branch: string; batch_year: number
 }) {
-  if (!process.env.RESEND_API_KEY || !ADMIN) return
+  const resend = getResend()
+  if (!resend || !ADMIN) return
   try {
     await resend.emails.send({
       from: FROM,
