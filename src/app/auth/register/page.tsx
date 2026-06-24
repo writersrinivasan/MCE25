@@ -2,15 +2,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Search, CheckCircle, AlertCircle, ArrowRight, User, Mail, Lock } from 'lucide-react'
-import { verifyWhitelist, registerAlumni } from './actions'
+import { Search, CheckCircle, AlertCircle, ArrowRight, Mail, Lock } from 'lucide-react'
+import { verifyWhitelist } from './actions'
+import { createClient } from '@/lib/supabase/client'
 import { BRANCH_META, type AlumniWhitelist } from '@/types/database'
 
 type Step = 'verify' | 'register' | 'done'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [step, setStep] = useState<Step>('verify')
   const [sprno, setSprno] = useState('')
   const [alumniData, setAlumniData] = useState<AlumniWhitelist | null>(null)
@@ -48,23 +47,38 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
     try {
-      const result = await registerAlumni({
-        sprno: alumniData.sprno,
-        email,
+      const supabase = createClient()
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
         password,
-        name: alumniData.name,
-        branch: alumniData.dept,
-        batch_year: alumniData.batch_year,
+        options: {
+          data: {
+            sprno: alumniData.sprno,
+            name: alumniData.name,
+            branch: alumniData.dept,
+            batch_year: String(alumniData.batch_year),
+          },
+        },
       })
-      if (!result.success) {
-        const msg = typeof result.error === 'string' && result.error
-          ? result.error : 'Registration failed. Please try again.'
-        setError(msg)
-      } else {
-        setStep('done')
+
+      if (signUpError) {
+        const msg = signUpError.message ?? 'Registration failed.'
+        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already been registered')) {
+          setError('This email is already registered. Please sign in instead.')
+        } else {
+          setError(msg)
+        }
+        return
       }
-    } catch {
-      setError('Connection error. Please check your internet and try again.')
+
+      if (!data.user) {
+        setError('Registration failed. Please try again.')
+        return
+      }
+
+      setStep('done')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -93,8 +107,8 @@ export default function RegisterPage() {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all"
                 style={{
-                  background: step === s ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : (i < ['verify','register','done'].indexOf(step) ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)'),
-                  color: step === s || i < ['verify','register','done'].indexOf(step) ? 'white' : '#64748b',
+                  background: step === s ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : (i < ['verify', 'register', 'done'].indexOf(step) ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)'),
+                  color: step === s || i < ['verify', 'register', 'done'].indexOf(step) ? 'white' : '#64748b',
                   border: '1px solid rgba(99,102,241,0.3)',
                 }}
               >{i + 1}</div>
