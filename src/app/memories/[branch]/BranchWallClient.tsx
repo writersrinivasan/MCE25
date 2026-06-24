@@ -8,7 +8,8 @@ import { uploadFile } from '@/lib/storage'
 import { BRANCH_META, BRANCHES, type Branch, type Memory, type Profile } from '@/types/database'
 import { getInitials, branchColor, timeAgo, cn } from '@/lib/utils'
 
-const YEARS = [1997, 1998, 1999, 2000, 2001]
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: CURRENT_YEAR - 1997 + 1 }, (_, i) => CURRENT_YEAR - i)
 const EMOJIS = ['❤️', '😂', '🔥', '👏', '😭', '🎓']
 
 function MemoryCard({ memory, currentUserId, onReact }: { memory: Memory; currentUserId: string; onReact: (id: string, emoji: string) => void }) {
