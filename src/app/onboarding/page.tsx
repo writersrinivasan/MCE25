@@ -67,7 +67,7 @@ export default function OnboardingPage() {
       updated_at: new Date().toISOString(),
     }).eq('id', user.id)
     setSaving(false)
-    router.push('/dashboard')
+    router.push('/dashboard?welcome=1')
     router.refresh()
   }
 

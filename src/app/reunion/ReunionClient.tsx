@@ -234,6 +234,26 @@ export default function ReunionClient({
         <p className="text-slate-400">25 Years of MCE Friendship — Coming Together Again</p>
       </div>
 
+      {/* RSVP nudge — visible only until the user RSVPs */}
+      {event && !myRsvp && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-2xl px-5 py-4 flex items-center gap-4"
+          style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)' }}
+        >
+          <div className="text-2xl shrink-0">🎟️</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-semibold text-sm">You haven't RSVPed yet!</div>
+            <div className="text-slate-400 text-xs">Let your batchmates know you're coming on 27 June. Scroll down to RSVP — it takes 2 seconds.</div>
+          </div>
+          <a href="#rsvp" className="shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold text-yellow-900"
+            style={{ background: '#eab308' }}>
+            RSVP Now
+          </a>
+        </motion.div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Main */}
         <div className="lg:col-span-3 space-y-6">
@@ -289,7 +309,9 @@ export default function ReunionClient({
         {/* Sidebar */}
         <div className="lg:col-span-2 space-y-4">
           {event && (
-            <RSVPWidget event={event} myRsvp={myRsvp} userId={profile.id} />
+            <div id="rsvp">
+              <RSVPWidget event={event} myRsvp={myRsvp} userId={profile.id} />
+            </div>
           )}
           {!event && (
             <div className="glass rounded-2xl p-6 text-center">

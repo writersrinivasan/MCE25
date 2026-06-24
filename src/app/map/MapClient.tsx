@@ -21,7 +21,7 @@ function groupByCountry(alumni: Profile[]) {
 
 type TooltipData = { name: string; branch: Branch; city: string | null; x: number; y: number }
 
-export default function MapClient({ alumni }: { alumni: Profile[] }) {
+export default function MapClient({ alumni, currentUserHasLocation }: { alumni: Profile[]; currentUserHasLocation: boolean }) {
   const [branchFilter, setBranchFilter] = useState<Branch | 'all'>('all')
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
@@ -55,6 +55,28 @@ export default function MapClient({ alumni }: { alumni: Profile[] }) {
           {alumni.length} alumni across {countriesRepresented} countries — {withCoords.length} pinned on the map
         </p>
       </div>
+
+      {/* Location nudge — shown until the user adds their city */}
+      {!currentUserHasLocation && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 rounded-2xl px-5 py-4 flex items-center gap-4"
+          style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)' }}
+        >
+          <MapPin className="w-5 h-5 text-orange-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-semibold text-sm">You're not on the map yet!</div>
+            <div className="text-slate-400 text-xs">
+              Add your city in your profile and join {withCoords.length} batchmates who are already pinned.
+            </div>
+          </div>
+          <a href="/onboarding" className="shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold text-white"
+            style={{ background: '#f97316' }}>
+            Add Location
+          </a>
+        </motion.div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-6">

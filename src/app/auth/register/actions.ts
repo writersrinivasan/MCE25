@@ -36,5 +36,13 @@ export async function registerAlumni(formData: {
   })
   if (authError) return { success: false, error: authError.message }
   if (!authData.user) return { success: false, error: 'Registration failed. Please try again.' }
+
+  // SPRNO whitelist match is the identity check — no admin approval needed.
+  // The DB trigger creates the profile synchronously; update status to approved immediately.
+  await (supabase as any)
+    .from('profiles')
+    .update({ status: 'approved' })
+    .eq('id', authData.user.id)
+
   return { success: true }
 }

@@ -39,11 +39,10 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile) {
+      // SPRNO verification is the identity gate — all members are auto-approved on signup.
+      // Onboarding must be completed before accessing the app.
       if (!profile.is_profile_complete && pathname !== '/onboarding') {
         return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-      if (profile.status === 'pending' && !pathname.startsWith('/pending-approval') && !pathname.startsWith('/onboarding')) {
-        return NextResponse.redirect(new URL('/pending-approval', request.url))
       }
       // Admin path guard — handled in admin/layout.tsx, no extra redirect needed here
     }
