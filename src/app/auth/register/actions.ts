@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { sendWelcomeEmail, sendAdminNotification } from '@/lib/email'
 import type { AlumniWhitelist } from '@/types/database'
 
 export async function verifyWhitelist(sprno: string): Promise<{ success: boolean; data?: AlumniWhitelist; error?: string }> {
@@ -43,6 +44,18 @@ export async function registerAlumni(formData: {
     .from('profiles')
     .update({ status: 'approved' })
     .eq('id', authData.user.id)
+
+  // Fire emails — failures are caught internally and never block registration
+  await Promise.allSettled([
+    sendWelcomeEmail(formData.email, formData.name, formData.sprno, formData.branch),
+    sendAdminNotification({
+      name: formData.name,
+      email: formData.email,
+      sprno: formData.sprno,
+      branch: formData.branch,
+      batch_year: formData.batch_year,
+    }),
+  ])
 
   return { success: true }
 }
